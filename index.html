@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0a0d09" />
+    <title>State of Decay: Pocket Outbreak</title>
+    <meta
+      name="description"
+      content="A tiny pixel-art survival sim inspired by State of Decay. Scavenge, recruit, fortify, and burn out the plague hearts."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%230d120b'/%3E%3Cpath d='M8 13S3 10 3 6.5C3 4.6 4.4 3.5 6 3.5c1 0 1.7.5 2 1 .3-.5 1-1 2-1 1.6 0 3 1.1 3 3C13 10 8 13 8 13Z' fill='%23b84a4a'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main id="app">
+      <div id="stage">
+        <canvas id="game" width="640" height="360" aria-label="State of Decay: Pocket Outbreak game view"></canvas>
+        <div class="screen-fx" aria-hidden="true"></div>
+
+        <div id="hud" class="hud hidden">
+          <div class="hud-top">
+            <div class="survivor-card panel">
+              <div class="portrait" id="portrait">MV</div>
+              <div class="survivor-main">
+                <div class="survivor-row">
+                  <strong id="survivorName">MARA VOSS</strong>
+                  <span id="survivorRole" class="tag">LEADER</span>
+                </div>
+                <div class="bar hp"><i id="hpFill"></i><span id="hpText">100</span></div>
+                <div class="bar stam"><i id="stamFill"></i></div>
+                <div class="equip">
+                  <span id="equipText">MACHETE / PISTOL</span>
+                  <span id="medsText">H MEDKIT · 3</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="center-stack">
+              <div class="clock panel">
+                <div class="clock-main"><b id="dayText">DAY 1</b><span id="timeText">08:00</span></div>
+                <div id="phaseText" class="phase">DAYLIGHT</div>
+              </div>
+              <div class="objective panel">
+                <span class="obj-label">OBJECTIVE</span>
+                <span id="objectiveText">DESTROY THE PLAGUE HEARTS</span>
+                <b id="objectiveCount">0 / 3</b>
+              </div>
+            </div>
+
+            <div class="top-right">
+              <div class="resources panel">
+                <div class="res" title="Food">
+                  <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 3h8l1 10H3L4 3Zm2-1h4v2H6V2Z" fill="#b8c777"/><path d="M6 6h4v1H6zM6 8h4v1H6z" fill="#59633c"/></svg>
+                  <b id="resFood">10</b><small>FOOD</small>
+                </div>
+                <div class="res" title="Medicine">
+                  <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="2" width="12" height="12" rx="1" fill="#d9d3c2"/><path d="M7 4h2v3h3v2H9v3H7V9H4V7h3V4Z" fill="#b54949"/></svg>
+                  <b id="resMeds">3</b><small>MEDS</small>
+                </div>
+                <div class="res" title="Ammo">
+                  <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3h2l1 3v7H4V6l1-3Zm5 0h2l1 3v7h-4V6l1-3Z" fill="#cdb36d"/><path d="M4 12h4v2H4zm5 0h4v2H9z" fill="#79663c"/></svg>
+                  <b id="resAmmo">15</b><small>AMMO</small>
+                </div>
+                <div class="res" title="Materials">
+                  <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 5l5-3 5 3v6l-5 3-5-3V5Z" fill="#a28f72"/><path d="M3 5l5 3 5-3M8 8v6" stroke="#5d5240" stroke-width="1" fill="none"/></svg>
+                  <b id="resMats">12</b><small>MATS</small>
+                </div>
+              </div>
+              <div class="mini-stats">
+                <span id="popText">2 / 3 SURVIVORS</span>
+                <span id="moraleText">MORALE 60</span>
+                <button id="muteBtn" class="icon-btn" type="button" title="Toggle sound (M)">SOUND ON</button>
+              </div>
+              <div class="base-integrity panel hidden" id="baseIntegrity">
+                <span>HOME</span>
+                <div class="bar"><i id="baseHpFill"></i></div>
+                <b id="baseHpText">100</b>
+              </div>
+            </div>
+          </div>
+
+          <div class="hud-bottom">
+            <div id="feed" class="feed" aria-live="polite"></div>
+            <div id="prompt" class="prompt hidden"><kbd>E</kbd><span id="promptText">LOOT</span></div>
+            <div id="hint" class="hint">WASD MOVE · LMB STRIKE · RMB SHOOT · E USE · SHIFT SPRINT · TAB BASE</div>
+          </div>
+
+          <div id="minimapWrap" class="minimap-wrap panel">
+            <canvas id="minimap" width="168" height="126"></canvas>
+            <div class="minimap-legend">
+              <span class="dot heart"></span>HEART
+              <span class="dot base"></span>BASE
+              <span class="dot loot"></span>LOOT
+            </div>
+          </div>
+
+          <div id="damageFlash" class="damage-flash" aria-hidden="true"></div>
+        </div>
+
+        <section id="startScreen" class="overlay start-screen">
+          <div class="start-inner">
+            <div class="kicker">AN UNOFFICIAL INDIE TRIBUTE</div>
+            <h1>STATE<span class="of">OF</span>DECAY</h1>
+            <div class="edition">POCKET&nbsp;OUTBREAK</div>
+            <p class="blurb">
+              The cities are gone. This town is not. Lead a handful of survivors, scavenge the dead
+              streets, and burn out the plague hearts before the community falls.
+            </p>
+            <div class="start-controls">
+              <div><kbd>WASD</kbd><span>MOVE</span></div>
+              <div><kbd>MOUSE</kbd><span>AIM</span></div>
+              <div><kbd>LMB</kbd><span>STRIKE</span></div>
+              <div><kbd>RMB</kbd><span>SHOOT</span></div>
+              <div><kbd>SHIFT</kbd><span>SPRINT</span></div>
+              <div><kbd>SPACE</kbd><span>DODGE</span></div>
+              <div><kbd>E</kbd><span>USE / LOOT</span></div>
+              <div><kbd>TAB</kbd><span>BASE</span></div>
+              <div><kbd>H</kbd><span>MEDKIT</span></div>
+              <div><kbd>ESC</kbd><span>PAUSE</span></div>
+            </div>
+            <button id="startBtn" class="big-btn" type="button">ENTER THE TOWN</button>
+            <div class="best" id="bestText">NO RUNS RECORDED</div>
+            <div class="disclaimer">Fan-made pixel survival. Not affiliated with Undead Labs.</div>
+          </div>
+        </section>
+
+        <section id="pauseScreen" class="overlay hidden">
+          <div class="menu-card panel">
+            <div class="kicker">THE DEAD CAN WAIT</div>
+            <h2>PAUSED</h2>
+            <button id="resumeBtn" class="big-btn" type="button">RESUME</button>
+            <button id="pauseRestartBtn" class="ghost-btn" type="button">RESTART RUN</button>
+            <button id="pauseMuteBtn" class="ghost-btn" type="button">SOUND: ON</button>
+            <div class="pause-controls">
+              <span><b>LMB</b> strike</span><span><b>RMB</b> shoot</span><span><b>E</b> loot / use</span>
+              <span><b>SHIFT</b> sprint</span><span><b>SPACE</b> dodge</span><span><b>H</b> medkit</span>
+              <span><b>TAB</b> base</span><span><b>M</b> mute</span>
+            </div>
+          </div>
+        </section>
+
+        <section id="baseScreen" class="overlay hidden">
+          <div class="base-shell">
+            <header class="base-header">
+              <div>
+                <div class="kicker">COMMUNITY SHELTER</div>
+                <h2>RANGER STATION</h2>
+              </div>
+              <div class="base-header-right">
+                <div id="baseLocText" class="base-loc">IN THE FIELD</div>
+                <button id="closeBase" class="ghost-btn" type="button">CLOSE [TAB]</button>
+              </div>
+            </header>
+            <div id="baseContent" class="base-content"></div>
+            <footer class="base-footer">
+              <span>Resources are shared across the community. Upgrades take effect at dawn.</span>
+              <span class="base-warning">Survivors die permanently.</span>
+            </footer>
+          </div>
+        </section>
+
+        <section id="endScreen" class="overlay hidden">
+          <div class="end-card panel">
+            <div class="kicker" id="endKicker">THE TOWN REMEMBERS</div>
+            <h2 id="endTitle">THE PLAGUE IS BROKEN</h2>
+            <p id="endBlurb"></p>
+            <div id="endStats" class="end-stats"></div>
+            <button id="restartBtn" class="big-btn" type="button">START A NEW RUN</button>
+            <div class="disclaimer">Every survivor is mortal. Every run is a different town.</div>
+          </div>
+        </section>
+      </div>
+      <div class="outside-note">BEST PLAYED WITH A KEYBOARD &amp; MOUSE · 16:9</div>
+    </main>
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
